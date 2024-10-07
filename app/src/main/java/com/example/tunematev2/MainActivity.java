@@ -12,6 +12,8 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.gson.annotations.SerializedName;
+
 import java.util.ArrayList;
 import java.util.Locale;
 
@@ -42,7 +44,6 @@ public class MainActivity extends AppCompatActivity {
             .baseUrl(BuildConfig.BASE_URL)  // build.gradle에 정의한 BASE_URL 사용
             .addConverterFactory(GsonConverterFactory.create())
             .build();
-
 
     // ApiService 인스턴스 생성
     ApiService apiService = retrofit.create(ApiService.class);
@@ -98,7 +99,7 @@ public class MainActivity extends AppCompatActivity {
                         public void onResponse(Call<PlaylistResponse> call, Response<PlaylistResponse> response) {
                             if (response.isSuccessful() && response.body() != null) {
                                 String playlistUrl = response.body().getPlaylistUrl();
-                                emotionResult.setText("Spotify playlist link: " + response.body().getEmotion());
+                                emotionResult.setText("Spotify playlist link: " + playlistUrl);
 
                                 // 전송 성공 시 토스트 메시지 출력
                                 Toast.makeText(MainActivity.this, "전송 성공: " + playlistUrl, Toast.LENGTH_SHORT).show();
@@ -148,7 +149,7 @@ public class MainActivity extends AppCompatActivity {
                     public void onResponse(Call<PlaylistResponse> call, Response<PlaylistResponse> response) {
                         if (response.isSuccessful() && response.body() != null) {
                             String playlistUrl = response.body().getPlaylistUrl();
-                            emotionResult.setText("Spotify playlist link: " + response.body().getEmotion());
+                            emotionResult.setText("Spotify playlist link: " + playlistUrl);
 
                             // 전송 성공 시 토스트 메시지 출력
                             Toast.makeText(MainActivity.this, "전송 성공: " + playlistUrl, Toast.LENGTH_SHORT).show();
@@ -199,9 +200,7 @@ public class MainActivity extends AppCompatActivity {
         // 네트워크 오류의 원인 출력
         emotionResult.setText("네트워크 오류: " + t.getMessage());
     }
-
 }
-
 
 // 데이터 클래스 정의
 class TextRequest {
@@ -212,15 +211,18 @@ class TextRequest {
     }
 }
 
+// 서버 응답을 처리하는 PlaylistResponse 클래스
 class PlaylistResponse {
     private String emotion;
+
+    @SerializedName("playlist_url")  // 서버의 JSON 응답에서 "playlist_url"을 매핑
     private String playlistUrl;
 
-    String getEmotion() {
+    public String getEmotion() {
         return emotion;
     }
 
-    String getPlaylistUrl() {
+    public String getPlaylistUrl() {
         return playlistUrl;
     }
 }
