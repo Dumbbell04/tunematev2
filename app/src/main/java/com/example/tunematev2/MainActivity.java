@@ -40,6 +40,7 @@ public class MainActivity extends AppCompatActivity {
     private Button voiceCommandBtn; // 음성 인식 시작 버튼
     private EditText editText;
     private SpeechRecognizer speechRecognizer;
+    private boolean isListening = false; // 음성 인식 상태를 관리하는 변수
 
     // Retrofit 인터페이스 정의
     public interface ApiService {
@@ -88,11 +89,14 @@ public class MainActivity extends AppCompatActivity {
             public void onBufferReceived(byte[] buffer) {}
 
             @Override
-            public void onEndOfSpeech() {}
+            public void onEndOfSpeech() {
+                emotionResult.setText("음성 인식 완료");
+            }
 
             @Override
             public void onError(int error) {
                 emotionResult.setText("오류 발생: 다시 시도하세요.");
+                isListening = false; // 오류 발생 시 음성 인식 상태를 중단으로 설정
             }
 
             @Override
@@ -107,6 +111,7 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     emotionResult.setText("음성 인식 실패: 다시 시도하세요.");
                 }
+                isListening = false; // 음성 인식이 끝나면 상태를 중단으로 설정
             }
 
             @Override
@@ -116,8 +121,14 @@ public class MainActivity extends AppCompatActivity {
             public void onEvent(int eventType, Bundle params) {}
         });
 
-        // 음성 인식 시작 버튼 클릭 리스너
-        voiceCommandBtn.setOnClickListener(v -> startSpeechRecognition());
+        // 음성 인식 시작 및 중단 버튼 클릭 리스너
+        voiceCommandBtn.setOnClickListener(v -> {
+            if (isListening) {
+                stopSpeechRecognition(); // 이미 인식 중이면 중단
+            } else {
+                startSpeechRecognition(); // 인식 중이 아니면 시작
+            }
+        });
 
         // 텍스트 전송 버튼 클릭 리스너
         textSendBtn.setOnClickListener(v -> {
@@ -142,6 +153,16 @@ public class MainActivity extends AppCompatActivity {
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.KOREAN);
         intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "음성을 입력하세요");
         speechRecognizer.startListening(intent);
+        isListening = true; // 음성 인식 중으로 설정
+    }
+
+    // 음성 인식 중단 메소드
+    private void stopSpeechRecognition() {
+        if (isListening && speechRecognizer != null) {
+            speechRecognizer.stopListening();
+            isListening = false; // 중단 상태로 설정
+            emotionResult.setText("음성 인식 중단됨");
+        }
     }
 
     // 텍스트를 서버로 전송하는 메소드
